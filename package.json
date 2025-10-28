@@ -16,6 +16,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@ssthouse/vue3-tree-chart": "^0.2.6",
     "vue": "^3.5.22"
   },
   "devDependencies": {
