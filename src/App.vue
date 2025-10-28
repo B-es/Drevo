@@ -1,47 +1,63 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+<template>
+  <div>
+    <vue-tree
+      style="width: 800px; height: 600px; border: 1px solid gray"
+      :dataset="sampleData"
+      :config="treeConfig"
+    >
+      <template v-slot:node="{ node, collapsed }">
+        <div
+          class="tree-node"
+          :style="{
+            border: collapsed ? '2px solid grey' : '',
+            borderRadius: '50%',
+          }"
+        >
+          {{ node.value }}
+        </div>
+      </template>
+    </vue-tree>
+  </div>
+</template>
+<script>
+import VueTree from '@ssthouse/vue3-tree-chart'
+import '@ssthouse/vue3-tree-chart/dist/vue3-tree-chart.css'
+
+export default {
+  components: { VueTree },
+  data() {
+    return {
+      sampleData: {
+        value: '1',
+        children: [{ value: '2', children: [{ value: '4' }, { value: '5' }] }, { value: '3' }],
+      },
+      treeConfig: { nodeWidth: 170, nodeHeight: 60, levelHeight: 190 },
+    }
+  },
+}
+
+// let sampleData =  {
+//   value: "1",
+//   children: [
+//     { value: "2", children: [{ value: "4" }, { value: "5" }] },
+//     { value: "3" },
+//   ],
+// };
+// let treeConfig = { nodeWidth: 120, nodeHeight: 80, levelHeight: 200 };
 </script>
 
-<template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
-</template>
-
-<style scoped>
-header {
-  line-height: 1.5;
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.tree-node {
+  background-color: red;
+  padding: 4vh;
 }
 </style>
