@@ -5,19 +5,27 @@
       :nodes="nodes"
       :edges="edges"
       :options="options"
-      @oncontext="handleClick"
+      @oncontext="handleRightClick"
+      @doubleClick="handleLeftDoubleClick"
       style="height: 100%"
     />
   </div>
-  <InfoDialog
-    v-model:visible="dialogVisible"
+  <edit-dialog
+    @close="editDialogVisible = false"
+    :visible="editDialogVisible"
+    :node="selectedPerson"
+    @save="savePerson"
+  ></edit-dialog>
+  <info-dialog
+    :visible="infoDialogVisible"
     :data="selectedPerson"
-    @close="dialogVisible = false"
+    @close="infoDialogVisible = false"
   />
 </template>
 
 <script setup lang="ts">
 import InfoDialog from './components/InfoDialog.vue'
+import EditDialog from './components/EditDialog.vue'
 import type { NodeData } from './types'
 import { onMounted, ref } from 'vue'
 import {
@@ -26,18 +34,60 @@ import {
   type Edge,
   type Options,
   type NetworkBaseEvent,
+  type NetworkClickEvent,
 } from 'vue-vis-network2'
 
-import { generateTree } from './generateTree'
+import {
+  generateTree,
+  nodeToNode,
+  generateEdges,
+  generateEdgesForNode,
+  removeDuplicateEdges,
+} from './generateTree'
 
 import DataManager from './data/DataManager'
 
 const selectedPerson = ref<NodeData>()
-const dialogVisible = ref(false)
+const infoDialogVisible = ref(false)
+const editDialogVisible = ref(false)
 
-const openDialog = (person: NodeData) => {
+const openInfoDialog = (person: NodeData) => {
   selectedPerson.value = person
-  dialogVisible.value = true
+  infoDialogVisible.value = true
+}
+
+const openEditDialog = (person: NodeData | undefined) => {
+  selectedPerson.value = person
+  editDialogVisible.value = true
+}
+
+const savePerson = (person: NodeData, isAdd: boolean) => {
+  console.log(person, isAdd)
+
+  if (isAdd) {
+    // Добавляем новую персону
+    dataManager.add(person)
+    nodes.value.push(nodeToNode(person))
+
+    // Генерируем связи только для новой персоны
+    const newEdges = generateEdgesForNode(person, dataManager.getData)
+    edges.value = [...edges.value, ...newEdges]
+  } else {
+    // Обновляем существующую персону
+
+    // Обновляем данные
+    dataManager.update(person.id, person)
+
+    // Удаляем старые связи этой персоны
+    edges.value = edges.value.filter((edge) => edge.from !== person.id && edge.to !== person.id)
+
+    // Генерируем новые связи для обновленной персоны
+    const newEdges = generateEdgesForNode(person, dataManager.getData)
+
+    // Добавляем новые связи, избегая дубликатов
+    const uniqueNewEdges = removeDuplicateEdges(edges.value, newEdges)
+    edges.value = [...edges.value, ...uniqueNewEdges]
+  }
 }
 
 const dataManager = new DataManager()
@@ -77,12 +127,18 @@ const options = ref<Options>({
 
 const networkRef = ref()
 
-const handleClick = (params: NetworkBaseEvent<string, string>) => {
+const handleRightClick = (params: NetworkBaseEvent<string, string>) => {
   params.event.preventDefault()
 
   if (!params.nodes.length) return
   const id = params.nodes[0] as string
-  openDialog(dataManager.getNodeDataById(id) as NodeData)
+  openInfoDialog(dataManager.getNodeDataById(id) as NodeData)
+}
+
+const handleLeftDoubleClick = (params: NetworkBaseEvent<string, string>) => {
+  if (!params.nodes.length) return openEditDialog(undefined)
+  const id = params.nodes[0] as string
+  openEditDialog(dataManager.getNodeDataById(id) as NodeData)
 }
 
 onMounted(() => {

@@ -16,3 +16,8 @@ export interface NodeData {
   spouses: Array<string> // id супругов
   children: Array<string> // id детей
 }
+
+export interface TreeData {
+  id: string
+  name: string
+}

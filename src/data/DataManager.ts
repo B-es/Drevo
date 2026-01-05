@@ -1,22 +1,40 @@
-import type { NodeData } from '@/types'
+import type { NodeData, TreeData } from '@/types'
 import jsonData from './init_data.json'
 
 export default class DataManager {
-  private data: Array<NodeData>
+  private individuals: Array<NodeData>
+  private treeData: TreeData
 
   constructor() {
-    this.data = jsonData as Array<NodeData>
+    const data = jsonData
+    this.individuals = jsonData['individuals'] as Array<NodeData>
+    this.treeData = { id: data.id, name: data.name }
   }
 
   get getDataJson(): string {
-    return JSON.stringify(this.data)
+    return JSON.stringify(this.individuals)
   }
 
   get getData(): Array<NodeData> {
-    return this.data
+    return this.individuals
   }
 
   getNodeDataById(id: string): NodeData | undefined {
-    return this.data.find((d) => d.id === id)
+    return this.individuals.find((d) => d.id === id)
+  }
+
+  add(node: NodeData) {
+    this.individuals.push(node)
+  }
+
+  update(id: string, node: NodeData): void {
+    const index = this.individuals.findIndex((item) => item.id === id)
+
+    if (index !== -1) {
+      // Заменяем объект по индексу
+      this.individuals[index] = node
+    } else {
+      console.warn(`Person with id ${id} not found`)
+    }
   }
 }
