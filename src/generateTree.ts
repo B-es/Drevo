@@ -87,11 +87,10 @@ export function removeDuplicateEdges(existingEdges: Edge[], newEdges: Edge[]): E
 export function addSpecificEdge(
   fromId: string,
   toId: string,
-  type: 'parent' | 'child' | 'spouse' | 'sibling',
+  type: 'parent' | 'spouse' | 'sibling',
 ): Edge[] {
   const edgeConfig = {
     parent: { from: fromId, to: toId, color: 'red' },
-    child: { from: fromId, to: toId, color: 'red' },
     spouse: { from: fromId, to: toId, color: 'magenta' },
     sibling: { from: fromId, to: toId, color: 'black' },
   }

@@ -7,6 +7,8 @@
       :options="options"
       @oncontext="handleRightClick"
       @doubleClick="handleLeftDoubleClick"
+      @click="handleCTRLLeftClick"
+      @selectNode="handleSelectedNode"
       style="height: 100%"
     />
   </div>
@@ -40,9 +42,9 @@ import {
 import {
   generateTree,
   nodeToNode,
-  generateEdges,
   generateEdgesForNode,
   removeDuplicateEdges,
+  addSpecificEdge,
 } from './generateTree'
 
 import DataManager from './data/DataManager'
@@ -62,8 +64,6 @@ const openEditDialog = (person: NodeData | undefined) => {
 }
 
 const savePerson = (person: NodeData, isAdd: boolean) => {
-  console.log(person, isAdd)
-
   if (isAdd) {
     // Добавляем новую персону
     dataManager.add(person)
@@ -121,7 +121,11 @@ const options = ref<Options>({
     size: 16,
   },
   edges: {
-    smooth: false,
+    smooth: {
+      type: 'curvedCCW', // изогнутые линии
+      forceDirection: 'vertical', // вертикальное направление изгиба
+      roundness: 0.2, // степень изгиба
+    },
   },
 })
 
@@ -139,6 +143,51 @@ const handleLeftDoubleClick = (params: NetworkBaseEvent<string, string>) => {
   if (!params.nodes.length) return openEditDialog(undefined)
   const id = params.nodes[0] as string
   openEditDialog(dataManager.getNodeDataById(id) as NodeData)
+}
+
+const handleSelectedNode = (params: NetworkBaseEvent<string, string>) => {
+  const isCTRLPressed = params.event.changedPointers[0].ctrlKey
+  if (isCTRLPressed) return
+  selectedPerson.value = dataManager.getNodeDataById(params.nodes[0])
+}
+
+const handleCTRLLeftClick = (params: NetworkBaseEvent<string, string>) => {
+  if (!params.nodes.length) return
+  const isCTRLPressed = params.event.changedPointers[0].ctrlKey
+  const nodeId = params.nodes[0]
+  console.log(isCTRLPressed)
+
+  if (selectedPerson.value === undefined) return
+
+  if (isCTRLPressed) {
+    const choice = prompt('1-Родитель/Ребёнок\n2-Муж/Жена\n3-Брат/Сестра', '1') as string
+    const node = dataManager.getNodeDataById(nodeId)
+
+    const fromId = selectedPerson.value.id
+    const toId = nodeId as string
+
+    let type = 'parent'
+    switch (choice) {
+      case '2':
+        type = 'spous'
+        selectedPerson.value.spouses.push(toId)
+        node?.spouses.push(fromId)
+        break
+      case '3':
+        type = 'sibling'
+        selectedPerson.value.siblings.push(toId)
+        node?.siblings.push(fromId)
+        break
+    }
+
+    const newEdges = addSpecificEdge(fromId, toId, type)
+
+    edges.value = [...edges.value, ...newEdges]
+
+    dataManager.update(fromId, selectedPerson.value)
+    dataManager.update(toId, node)
+    console.log(node, selectedPerson.value)
+  }
 }
 
 onMounted(() => {
