@@ -1,10 +1,13 @@
 <template>
   <div class="tree-space">
-    <vue-tree :dataset="sampleData" :config="treeConfig">
-      <template v-slot:node="{ node, collapsed }">
-        <drevo-node :node-data="node" :collapsed="false" @on-right-click="openDialog"></drevo-node>
-      </template>
-    </vue-tree>
+    <vue-vis-network
+      ref="networkRef"
+      :nodes="nodes"
+      :edges="edges"
+      :options="options"
+      @oncontext="handleClick"
+      style="height: 100%"
+    />
   </div>
   <InfoDialog
     v-model:visible="dialogVisible"
@@ -15,49 +18,86 @@
 
 <script setup lang="ts">
 import InfoDialog from './components/InfoDialog.vue'
+import type { NodeData } from './types'
+import { onMounted, ref } from 'vue'
+import {
+  VueVisNetwork,
+  type Node,
+  type Edge,
+  type Options,
+  type NetworkBaseEvent,
+} from 'vue-vis-network2'
 
-const sampleData: NodeData = {
-  firstName: 'Иван',
-  id: 'id_1',
-  lastName: 'Васильев',
-  maidenName: '',
-  birthDate: '2003-06-10',
-  birthPlace: 'Страхов',
-  deathDate: 'undefined',
-  deathPlace: 'Мир',
-  gender: 'male',
-  photo:
-    'https://sun9-20.userapi.com/s/v1/ig2/SuX0UAlb6EFD-_6Nz6ZN-CRzvp-saeh2oyW1wEPBoXIjLBXmmvbsop92Ky4go2lHalYkoRmxmJHfOD-HoNQgBfof.jpg?quality=95&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x304,640x360,720x405,1080x607,1280x720,1440x810,2560x1440&from=bu&cs=2560x0',
-  bio: '8',
-  parents: [],
-  spouses: [],
-  children: [],
-}
+import { generateTree } from './generateTree'
 
-const selectedPerson = ref<NodeData | undefined>()
+import DataManager from './data/DataManager'
+
+const selectedPerson = ref<NodeData>()
 const dialogVisible = ref(false)
 
 const openDialog = (person: NodeData) => {
   selectedPerson.value = person
   dialogVisible.value = true
 }
-</script>
 
-<script lang="ts">
-import VueTree from '@ssthouse/vue3-tree-chart'
-import '@ssthouse/vue3-tree-chart/dist/vue3-tree-chart.css'
-import DrevoNode from './components/DrevoNode.vue'
-import type { NodeData } from './types'
-import { ref } from 'vue'
+const dataManager = new DataManager()
 
-export default {
-  components: { VueTree },
-  data() {
-    return {
-      treeConfig: { nodeWidth: 170, nodeHeight: 60, levelHeight: 190 },
-    }
+const [n, e] = generateTree(dataManager.getData) as [Node[], Edge[]]
+
+const nodes = ref<Node[]>(n)
+const edges = ref<Edge[]>(e)
+console.log(e)
+
+const options = ref<Options>({
+  physics: {
+    enabled: true,
+    stabilization: {
+      enabled: true,
+      iterations: 500,
+    },
+    solver: 'forceAtlas2Based',
+    forceAtlas2Based: {
+      gravitationalConstant: -50,
+      centralGravity: 0.01,
+      springLength: 100,
+      springConstant: 0.08,
+      damping: 0.4,
+      avoidOverlap: 1,
+    },
   },
+  locale: 'ru',
+  nodes: {
+    shape: 'dot',
+    size: 16,
+  },
+  edges: {
+    smooth: false,
+  },
+})
+
+const networkRef = ref()
+
+const handleClick = (params: NetworkBaseEvent<string, string>) => {
+  params.event.preventDefault()
+
+  if (!params.nodes.length) return
+  const id = params.nodes[0] as string
+  openDialog(dataManager.getNodeDataById(id) as NodeData)
 }
+
+onMounted(() => {
+  // Get vis-network instance
+  const network = networkRef.value.network
+  console.log('Network instance:', network)
+
+  // Get node data
+  const node = networkRef.value.getNode(1)
+  console.log('Node 1:', node)
+
+  // Get edge data
+  const edge = networkRef.value.getEdge(1)
+  console.log('Edge 1:', edge)
+})
 </script>
 
 <style>

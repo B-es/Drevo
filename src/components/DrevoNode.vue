@@ -3,7 +3,6 @@ import type { NodeData } from '@/types'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
-  collapsed: boolean
   nodeData: NodeData
 }>()
 
@@ -22,7 +21,6 @@ const emit = defineEmits(['on-right-click'])
     v-on:contextmenu="onContextMenu"
     class="tree-node"
     :style="{
-      border: collapsed ? '2px solid grey' : '',
       borderColor: nodeData.gender === 'male' ? 'cyan' : 'pink',
     }"
   >

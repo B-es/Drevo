@@ -317,28 +317,32 @@ const handleImageError = (event: Event) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-width: 0; /* Для правильного переноса текста */
+  gap: 12px;
 }
 
 .info-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
-  padding: 4px 0;
-  border-bottom: 1px dashed #f0f0f0;
-}
-
-.info-row:last-child {
-  border-bottom: none;
 }
 
 .label {
+  flex: 0 0 140px;
   font-weight: 600;
   color: #555;
-  min-width: 140px;
   font-size: 15px;
+  text-align: right;
+  white-space: nowrap;
+  padding-right: 8px;
+}
+
+.label::after {
+  content: ':';
+}
+
+/* value и place как inline элементы в одной строке */
+.value-place {
+  flex: 1;
+  display: inline; /* или оставить как есть для flex */
 }
 
 .value {
@@ -351,6 +355,7 @@ const handleImageError = (event: Event) => {
   color: #7f8c8d;
   font-size: 14.5px;
   font-style: italic;
+  margin-left: 8px; /* Вплотную к value */
 }
 
 /* Биография */

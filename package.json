@@ -16,8 +16,10 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@ssthouse/vue3-tree-chart": "^0.2.6",
-    "vue": "^3.5.22"
+    "vis-data": "^8.0.3",
+    "vis-network": "^10.0.2",
+    "vue": "^3.5.22",
+    "vue-vis-network2": "^0.1.0"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
@@ -27,6 +29,7 @@
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
     "jsdom": "^27.0.1",
+    "less": "^4.5.1",
     "npm-run-all2": "^8.0.4",
     "prettier": "3.6.2",
     "typescript": "~5.9.0",
