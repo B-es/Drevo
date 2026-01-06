@@ -6,7 +6,7 @@
         <div class="dialog-header">
           <div class="person-name">
             <h2>{{ fullName }}</h2>
-            <div class="name-variants" v-if="data.maidenName">
+            <div class="name-variants" v-if="data?.maidenName">
               <span class="maiden-name"> (дев. {{ data.maidenName }}) </span>
             </div>
           </div>
@@ -19,7 +19,7 @@
           <!-- Фото и основная информация -->
           <div class="main-info">
             <!-- Фото -->
-            <div class="photo-section" v-if="data.photo">
+            <div class="photo-section" v-if="data?.photo">
               <img
                 :src="data.photo"
                 :alt="fullName"
@@ -34,10 +34,10 @@
               <div class="info-row">
                 <span class="label">Дата рождения:</span>
                 <span class="value">{{ formattedBirthDate }}</span>
-                <span class="place" v-if="data.birthPlace">, {{ data.birthPlace }}</span>
+                <span class="place" v-if="data?.birthPlace">, {{ data.birthPlace }}</span>
               </div>
 
-              <div class="info-row" v-if="data.deathDate">
+              <div class="info-row" v-if="data?.deathDate">
                 <span class="label">Дата смерти:</span>
                 <span class="value">{{ formattedDeathDate }}</span>
                 <span class="place" v-if="data.deathPlace">, {{ data.deathPlace }}</span>
@@ -57,9 +57,9 @@
           </div>
 
           <!-- Биография -->
-          <div class="bio-section" v-if="data.bio">
+          <div class="bio-section" v-if="data?.bio">
             <h3 class="section-title">Биография</h3>
-            <div class="bio-text">{{ data.bio }}</div>
+            <div class="bio-text">{{ data?.bio }}</div>
           </div>
         </div>
 
@@ -77,7 +77,7 @@ import { computed } from 'vue'
 import type { NodeData } from '@/types'
 
 interface Props {
-  data: NodeData
+  data: NodeData | undefined
   visible: boolean
 }
 
@@ -90,19 +90,19 @@ const emit = defineEmits<Emits>()
 
 // Компьютеды
 const fullName = computed(() => {
-  return `${props.data.firstName} ${props.data.lastName}`
+  return `${props.data?.firstName} ${props.data?.lastName}`
 })
 
 const formattedBirthDate = computed(() => {
-  return formatDate(props.data.birthDate)
+  return formatDate(props.data?.birthDate || '')
 })
 
 const formattedDeathDate = computed(() => {
-  return props.data.deathDate ? formatDate(props.data.deathDate) : null
+  return props.data?.deathDate ? formatDate(props.data.deathDate) : null
 })
 
 const age = computed(() => {
-  if (!props.data.deathDate) return null
+  if (!props.data?.deathDate) return null
 
   const birth = new Date(props.data.birthDate)
   const death = new Date(props.data.deathDate)
@@ -135,7 +135,7 @@ const genderText = computed(() => {
     мужской: 'Мужской',
     женский: 'Женский',
   }
-  return genderMap[props.data.gender?.toLowerCase()] || props.data.gender
+  return genderMap[props.data?.gender?.toLowerCase() || ''] || props.data?.gender
 })
 
 // Методы

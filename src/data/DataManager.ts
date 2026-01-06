@@ -5,14 +5,14 @@ export default class DataManager {
   private individuals: Array<NodeData>
   private treeData: TreeData
 
-  constructor() {
-    const data = jsonData
-    this.individuals = jsonData['individuals'] as Array<NodeData>
+  constructor(json: string | undefined) {
+    const data = json === undefined ? jsonData : JSON.parse(json)
+    this.individuals = data['individuals'] as Array<NodeData>
     this.treeData = { id: data.id, name: data.name }
   }
 
   get getDataJson(): string {
-    return JSON.stringify(this.individuals)
+    return JSON.stringify({ ...this.treeData, individuals: this.individuals })
   }
 
   get getData(): Array<NodeData> {

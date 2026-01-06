@@ -23,6 +23,7 @@
     :data="selectedPerson"
     @close="infoDialogVisible = false"
   />
+  <panel @load="handleLoad" @save="handleSave" @saveSVG="handleSaveSVG"></panel>
 </template>
 
 <script setup lang="ts">
@@ -36,7 +37,6 @@ import {
   type Edge,
   type Options,
   type NetworkBaseEvent,
-  type NetworkClickEvent,
 } from 'vue-vis-network2'
 
 import {
@@ -48,6 +48,7 @@ import {
 } from './generateTree'
 
 import DataManager from './data/DataManager'
+import Panel from './components/Panel.vue'
 
 const selectedPerson = ref<NodeData>()
 const infoDialogVisible = ref(false)
@@ -90,7 +91,7 @@ const savePerson = (person: NodeData, isAdd: boolean) => {
   }
 }
 
-const dataManager = new DataManager()
+let dataManager = new DataManager(undefined)
 
 const [n, e] = generateTree(dataManager.getData) as [Node[], Edge[]]
 
@@ -122,6 +123,7 @@ const options = ref<Options>({
   },
   edges: {
     smooth: {
+      enabled: true,
       type: 'curvedCCW', // изогнутые линии
       forceDirection: 'vertical', // вертикальное направление изгиба
       roundness: 0.2, // степень изгиба
@@ -148,7 +150,7 @@ const handleLeftDoubleClick = (params: NetworkBaseEvent<string, string>) => {
 const handleSelectedNode = (params: NetworkBaseEvent<string, string>) => {
   const isCTRLPressed = params.event.changedPointers[0].ctrlKey
   if (isCTRLPressed) return
-  selectedPerson.value = dataManager.getNodeDataById(params.nodes[0])
+  selectedPerson.value = dataManager.getNodeDataById(params.nodes[0] as string)
 }
 
 const handleCTRLLeftClick = (params: NetworkBaseEvent<string, string>) => {
@@ -161,7 +163,7 @@ const handleCTRLLeftClick = (params: NetworkBaseEvent<string, string>) => {
 
   if (isCTRLPressed) {
     const choice = prompt('1-Родитель/Ребёнок\n2-Муж/Жена\n3-Брат/Сестра', '1') as string
-    const node = dataManager.getNodeDataById(nodeId)
+    const node = dataManager.getNodeDataById(nodeId as string)
 
     const fromId = selectedPerson.value.id
     const toId = nodeId as string
@@ -203,6 +205,61 @@ onMounted(() => {
   const edge = networkRef.value.getEdge(1)
   console.log('Edge 1:', edge)
 })
+
+const handleSave = () => {
+  const dataToSave = dataManager.getDataJson
+  // Создаем Blob и ссылку для скачивания
+  const blob = new Blob([dataToSave], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'tree-data-' + new Date().toISOString().split('T')[0] + '.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+
+  alert('Данные сохранены в файл')
+}
+
+const handleLoad = () => {
+  // Создаем input для выбора файла
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+
+  input.onchange = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+
+    if (!file) return
+
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string
+        dataManager = new DataManager(content)
+
+        const [n, ed] = generateTree(dataManager.getData) as [Node[], Edge[]]
+        nodes.value = n
+        edges.value = ed
+        alert('Данные успешно загружены!')
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error)
+        alert('Ошибка при загрузке файла. Проверьте формат данных.')
+      }
+    }
+
+    reader.readAsText(file)
+  }
+
+  input.click()
+}
+
+const handleSaveSVG = async () => {
+  alert('Политика CORS')
+}
 </script>
 
 <style>
