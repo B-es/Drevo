@@ -106,11 +106,26 @@ export function addSpecificEdge(
 }
 
 export function nodeToNode(node: NodeData) {
+  console.log(typeof node.deathDate, 'dd', node.deathDate)
   return {
     id: node.id,
-    label: node.firstName + ' ' + node.lastName,
+    label:
+      node.firstName +
+      ' ' +
+      node.lastName +
+      (node.deathDate !== 'undefined'
+        ? '\n' +
+          new Date(node.birthDate).getFullYear() +
+          '-' +
+          new Date(node.deathDate).getFullYear()
+        : ''),
     shape: 'circularImage',
     image: node.photo,
+    shadow: {
+      enabled: true,
+      color: node.deathDate !== 'undefined' ? 'gray' : node.gender === 'male' ? 'red' : 'magenta',
+      size: 15,
+    },
   }
 }
 

@@ -119,7 +119,7 @@ const options = ref<Options>({
   locale: 'ru',
   nodes: {
     shape: 'dot',
-    size: 16,
+    size: 18,
   },
   edges: {
     smooth: {
