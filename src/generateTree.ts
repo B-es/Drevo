@@ -106,9 +106,13 @@ export function addSpecificEdge(
 }
 
 export function nodeToNode(node: NodeData) {
-  console.log(typeof node.deathDate, 'dd', node.deathDate)
+  const baseImg =
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2Y1ZjVmNSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjQwIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNjAiIHk9IjYwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM3NzciIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj4/PC90ZXh0Pjwvc3ZnPg=='
   return {
     id: node.id,
+    font: {
+      color: 'white',
+    },
     label:
       node.firstName +
       ' ' +
@@ -121,6 +125,7 @@ export function nodeToNode(node: NodeData) {
         : ''),
     shape: 'circularImage',
     image: node.photo,
+    brokenImage: baseImg,
     shadow: {
       enabled: true,
       color: node.deathDate !== 'undefined' ? 'gray' : node.gender === 'male' ? 'red' : 'magenta',
