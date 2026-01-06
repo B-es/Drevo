@@ -2,10 +2,14 @@ import type { NodeData, TreeData } from '@/types'
 import jsonData from './init_data.json'
 
 export default class DataManager {
-  private individuals: Array<NodeData>
-  private treeData: TreeData
+  private individuals!: Array<NodeData>
+  private treeData!: TreeData
 
   constructor(json: string | undefined) {
+    this.load(json)
+  }
+
+  load(json: string | undefined) {
     const data = json === undefined ? jsonData : JSON.parse(json)
     this.individuals = data['individuals'] as Array<NodeData>
     this.treeData = { id: data.id, name: data.name }

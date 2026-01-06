@@ -53,51 +53,46 @@ import Panel from './components/Panel.vue'
 const selectedPerson = ref<NodeData>()
 const infoDialogVisible = ref(false)
 const editDialogVisible = ref(false)
+const dataManager = new DataManager(undefined)
 
-const openInfoDialog = (person: NodeData) => {
+const openDialog = (person: NodeData | undefined, type: 'info' | 'edit') => {
   selectedPerson.value = person
-  infoDialogVisible.value = true
+  if (type === 'info') infoDialogVisible.value = true
+  else editDialogVisible.value = true
 }
 
-const openEditDialog = (person: NodeData | undefined) => {
-  selectedPerson.value = person
-  editDialogVisible.value = true
+const updateEdgesForPerson = (person: NodeData, isAdd: boolean) => {
+  if (isAdd) {
+    const newEdges = generateEdgesForNode(person, dataManager.getData)
+    edges.value = [...edges.value, ...newEdges]
+  } else {
+    edges.value = edges.value.filter((edge) => edge.from !== person.id && edge.to !== person.id)
+    const newEdges = generateEdgesForNode(person, dataManager.getData)
+    edges.value = [...edges.value, ...removeDuplicateEdges(edges.value, newEdges)]
+  }
 }
 
 const savePerson = (person: NodeData, isAdd: boolean) => {
   if (isAdd) {
-    // Добавляем новую персону
     dataManager.add(person)
     nodes.value.push(nodeToNode(person))
-
-    // Генерируем связи только для новой персоны
-    const newEdges = generateEdgesForNode(person, dataManager.getData)
-    edges.value = [...edges.value, ...newEdges]
   } else {
-    // Обновляем существующую персону
-
-    // Обновляем данные
     dataManager.update(person.id, person)
-
-    // Удаляем старые связи этой персоны
-    edges.value = edges.value.filter((edge) => edge.from !== person.id && edge.to !== person.id)
-
-    // Генерируем новые связи для обновленной персоны
-    const newEdges = generateEdgesForNode(person, dataManager.getData)
-
-    // Добавляем новые связи, избегая дубликатов
-    const uniqueNewEdges = removeDuplicateEdges(edges.value, newEdges)
-    edges.value = [...edges.value, ...uniqueNewEdges]
   }
+  updateEdgesForPerson(person, isAdd)
 }
 
-let dataManager = new DataManager(undefined)
+function loadTreeFromContent(content: string | undefined) {
+  dataManager.load(content)
+  const [n, e] = generateTree(dataManager.getData) as [Node[], Edge[]]
+  nodes.value = n
+  edges.value = e
+}
 
-const [n, e] = generateTree(dataManager.getData) as [Node[], Edge[]]
+const nodes = ref<Node[]>([])
+const edges = ref<Edge[]>([])
 
-const nodes = ref<Node[]>(n)
-const edges = ref<Edge[]>(e)
-console.log(e)
+loadTreeFromContent(undefined)
 
 const options = ref<Options>({
   physics: {
@@ -131,64 +126,66 @@ const options = ref<Options>({
   },
 })
 
-const networkRef = ref()
+const networkRef = ref(null)
+
+function getNodeDataSafe(id: string) {
+  const node = dataManager.getNodeDataById(id)
+  if (!node) console.warn(`Node with id ${id} not found`)
+  return node as NodeData | undefined
+}
 
 const handleRightClick = (params: NetworkBaseEvent<string, string>) => {
   params.event.preventDefault()
 
   if (!params.nodes.length) return
   const id = params.nodes[0] as string
-  openInfoDialog(dataManager.getNodeDataById(id) as NodeData)
+  openDialog(getNodeDataSafe(id), 'info')
 }
 
 const handleLeftDoubleClick = (params: NetworkBaseEvent<string, string>) => {
-  if (!params.nodes.length) return openEditDialog(undefined)
+  if (!params.nodes.length) return openDialog(undefined, 'edit')
   const id = params.nodes[0] as string
-  openEditDialog(dataManager.getNodeDataById(id) as NodeData)
+  openDialog(getNodeDataSafe(id), 'edit')
 }
 
 const handleSelectedNode = (params: NetworkBaseEvent<string, string>) => {
   const isCTRLPressed = params.event.changedPointers[0].ctrlKey
   if (isCTRLPressed) return
-  selectedPerson.value = dataManager.getNodeDataById(params.nodes[0] as string)
+  selectedPerson.value = getNodeDataSafe(params.nodes[0] as string)
+}
+
+function addRelationship(from: NodeData, to: NodeData, choice: string) {
+  let type: 'parent' | 'spous' | 'sibling' = 'parent'
+  switch (choice) {
+    case '2':
+      type = 'spous'
+      from.spouses.push(to.id)
+      to.spouses.push(from.id)
+      break
+    case '3':
+      type = 'sibling'
+      from.siblings.push(to.id)
+      to.siblings.push(from.id)
+      break
+  }
+  edges.value = [...edges.value, ...addSpecificEdge(from.id, to.id, type)]
+  dataManager.update(from.id, from)
+  dataManager.update(to.id, to)
+}
+
+function askRelationshipType(): string {
+  return prompt('1-Родитель/Ребёнок\n2-Муж/Жена\n3-Брат/Сестра', '1') || '1'
 }
 
 const handleCTRLLeftClick = (params: NetworkBaseEvent<string, string>) => {
   if (!params.nodes.length) return
   const isCTRLPressed = params.event.changedPointers[0].ctrlKey
-  const nodeId = params.nodes[0]
-  console.log(isCTRLPressed)
+  const nodeId = params.nodes[0] as string
 
-  if (selectedPerson.value === undefined) return
-
-  if (isCTRLPressed) {
-    const choice = prompt('1-Родитель/Ребёнок\n2-Муж/Жена\n3-Брат/Сестра', '1') as string
-    const node = dataManager.getNodeDataById(nodeId as string)
-
-    const fromId = selectedPerson.value.id
-    const toId = nodeId as string
-
-    let type = 'parent'
-    switch (choice) {
-      case '2':
-        type = 'spous'
-        selectedPerson.value.spouses.push(toId)
-        node?.spouses.push(fromId)
-        break
-      case '3':
-        type = 'sibling'
-        selectedPerson.value.siblings.push(toId)
-        node?.siblings.push(fromId)
-        break
-    }
-
-    const newEdges = addSpecificEdge(fromId, toId, type)
-
-    edges.value = [...edges.value, ...newEdges]
-
-    dataManager.update(fromId, selectedPerson.value)
-    dataManager.update(toId, node)
-    console.log(node, selectedPerson.value)
+  if (isCTRLPressed && selectedPerson.value) {
+    const node = getNodeDataSafe(nodeId)
+    if (!node) return
+    addRelationship(selectedPerson.value, node, askRelationshipType())
   }
 }
 
@@ -206,19 +203,20 @@ onMounted(() => {
   console.log('Edge 1:', edge)
 })
 
-const handleSave = () => {
-  const dataToSave = dataManager.getDataJson
-  // Создаем Blob и ссылку для скачивания
-  const blob = new Blob([dataToSave], { type: 'application/json' })
+function downloadFile(content: string, fileName: string, type = 'application/json') {
+  const blob = new Blob([content], { type })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'tree-data-' + new Date().toISOString().split('T')[0] + '.json'
+  a.download = fileName
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
 
+const handleSave = () => {
+  downloadFile(dataManager.getDataJson, `tree-data-${new Date().toISOString().split('T')[0]}.json`)
   alert('Данные сохранены в файл')
 }
 
@@ -239,11 +237,7 @@ const handleLoad = () => {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string
-        dataManager = new DataManager(content)
-
-        const [n, ed] = generateTree(dataManager.getData) as [Node[], Edge[]]
-        nodes.value = n
-        edges.value = ed
+        loadTreeFromContent(content)
         alert('Данные успешно загружены!')
       } catch (error) {
         console.error('Ошибка загрузки данных:', error)
@@ -293,13 +287,5 @@ body {
   width: 100%;
   height: 100%;
   background-color: #424242;
-}
-
-.tree-container {
-  margin: 0;
-  border: 1px solid gray;
-  width: 100%;
-  height: 100%;
-  position: absolute;
 }
 </style>
