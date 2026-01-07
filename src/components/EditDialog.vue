@@ -6,160 +6,58 @@
         <button class="close-btn" @click="closeDialog">×</button>
       </div>
 
-      <form @submit.prevent="savePerson">
+      <form @submit.prevent="onSave">
         <div class="form-grid">
-          <!-- Основные поля -->
-          <div class="form-group">
-            <label for="firstName">Имя *</label>
-            <input
-              id="firstName"
-              v-model="formData.firstName"
-              type="text"
-              required
-              placeholder="Введите имя"
-            />
-          </div>
+          <div
+            v-for="field in fields"
+            :key="field.key"
+            class="form-group"
+            :class="{ 'full-width': field.fullWidth }"
+          >
+            <label :for="field.key">
+              {{ field.label }}
+              <span v-if="field.required">*</span>
+            </label>
 
-          <div class="form-group">
-            <label for="lastName">Фамилия *</label>
+            <!-- текстовые поля и массивы -->
             <input
-              id="lastName"
-              v-model="formData.lastName"
-              type="text"
-              required
-              placeholder="Введите фамилию"
+              v-if="field.type === 'text'"
+              :id="field.key"
+              :placeholder="field.placeholder || ''"
+              :value="
+                arrayFields.includes(field.key) ? arrayStrings[field.key] : formData[field.key]
+              "
+              @input="onInput(field.key, $event)"
+              :required="field.required || false"
             />
-          </div>
 
-          <div class="form-group">
-            <label for="patronymic">Отчество</label>
-            <input
-              id="patronymic"
-              v-model="formData.patronymic"
-              type="text"
-              placeholder="Введите отчество"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="maidenName">Девичья фамилия</label>
-            <input
-              id="maidenName"
-              v-model="formData.maidenName"
-              type="text"
-              placeholder="Введите девичью фамилию"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="gender">Пол</label>
-            <select id="gender" v-model="formData.gender">
-              <option value="">Не указан</option>
-              <option value="male">Мужской</option>
-              <option value="female">Женский</option>
-              <option value="other">Другой</option>
+            <!-- select -->
+            <select
+              v-else-if="field.type === 'select'"
+              :id="field.key"
+              v-model="formData[field.key]"
+            >
+              <option v-for="option in field.options" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
-          </div>
 
-          <!-- Даты -->
-          <div class="form-group">
-            <label for="birthDate">Дата рождения</label>
-            <input id="birthDate" v-model="formData.birthDate" type="date" />
-          </div>
-
-          <div class="form-group">
-            <label for="birthPlace">Место рождения</label>
-            <input
-              id="birthPlace"
-              v-model="formData.birthPlace"
-              type="text"
-              placeholder="Введите место рождения"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="deathDate">Дата смерти</label>
-            <input id="deathDate" v-model="formData.deathDate" type="date" />
-          </div>
-
-          <div class="form-group">
-            <label for="deathPlace">Место смерти</label>
-            <input
-              id="deathPlace"
-              v-model="formData.deathPlace"
-              type="text"
-              placeholder="Введите место смерти"
-            />
-          </div>
-
-          <!-- Ссылка на фото -->
-          <div class="form-group full-width">
-            <label for="photo">Ссылка на фото</label>
-            <input
-              id="photo"
-              v-model="formData.photo"
-              type="text"
-              placeholder="https://example.com/photo.jpg"
-            />
-            <div v-if="formData.photo" class="photo-preview">
-              <img :src="formData.photo" alt="Предпросмотр фото" @error="handleImageError" />
-            </div>
-          </div>
-
-          <!-- Биография -->
-          <div class="form-group full-width">
-            <label for="bio">Биография</label>
+            <!-- textarea -->
             <textarea
-              id="bio"
-              v-model="formData.bio"
+              v-else-if="field.type === 'textarea'"
+              :id="field.key"
               rows="4"
-              placeholder="Введите биографию"
+              :placeholder="field.placeholder || ''"
+              v-model="formData[field.key]"
             ></textarea>
-          </div>
 
-          <!-- Списки ID связей -->
-          <div class="form-group">
-            <label for="parents">Родители (ID через запятую)</label>
-            <input
-              id="parents"
-              :value="parentsString"
-              @input="updateArray('parents', $event)"
-              type="text"
-              placeholder="person_1, person_2"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="spouses">Супруги (ID через запятую)</label>
-            <input
-              id="spouses"
-              :value="spousesString"
-              @input="updateArray('spouses', $event)"
-              type="text"
-              placeholder="person_3"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="children">Дети (ID через запятую)</label>
-            <input
-              id="children"
-              :value="childrenString"
-              @input="updateArray('children', $event)"
-              type="text"
-              placeholder="person_5, person_6"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="siblings">Братья/Сёстры (ID через запятую)</label>
-            <input
-              id="siblings"
-              :value="siblingsString"
-              @input="updateArray('siblings', $event)"
-              type="text"
-              placeholder="person_7, person_8"
-            />
+            <!-- превью фото -->
+            <div
+              v-if="field.key === 'photo' && formData.photo && !imageError"
+              class="photo-preview"
+            >
+              <img :src="formData.photo" alt="Предпросмотр" @error="handleImageError" />
+            </div>
           </div>
         </div>
 
@@ -174,131 +72,100 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch, type PropType } from 'vue'
+<script lang="ts">
+import type { NodeData } from '@/types'
+import { computed, watch } from 'vue'
+import { usePersonForm } from '@/app/composables/usePersonForm'
 
-export interface NodeData {
-  id: string
-  firstName: string
-  lastName: string
-  patronymic: string
-  maidenName: string
-  birthDate: string
-  birthPlace: string
-  deathDate: string
-  deathPlace: string
-  gender: string
-  photo: string
-  bio: string
-  siblings: Array<string>
-  parents: Array<string>
-  spouses: Array<string>
-  children: Array<string>
-}
+export default {
+  name: 'EditDialog',
+  props: {
+    visible: { type: Boolean, default: false },
+    node: { type: Object as () => NodeData | undefined, default: undefined },
+  },
+  emits: ['save', 'close'],
+  setup(props, { emit }) {
+    const {
+      formData,
+      imageError,
+      isEditMode,
+      arrayFields,
+      arrayStrings,
+      updateArray,
+      handleImageError,
+      initForm,
+      save,
+    } = usePersonForm(props.node)
 
-interface Emits {
-  (e: 'save', data: NodeData, isAdd: boolean): void
-  (e: 'close'): void
-}
+    // Сброс формы при открытии
+    watch(
+      () => props.visible,
+      (v) => {
+        if (v) initForm(props.node)
+      },
+    )
 
-interface Props {
-  visible: boolean
-  node?: NodeData
-}
+    const fields = [
+      { label: 'Имя', key: 'firstName', type: 'text', required: true },
+      { label: 'Фамилия', key: 'lastName', type: 'text', required: true },
+      { label: 'Отчество', key: 'patronymic', type: 'text' },
+      { label: 'Девичья фамилия', key: 'maidenName', type: 'text' },
+      {
+        label: 'Пол',
+        key: 'gender',
+        type: 'select',
+        options: [
+          { label: 'Не указан', value: '' },
+          { label: 'Мужской', value: 'male' },
+          { label: 'Женский', value: 'female' },
+          { label: 'Другой', value: 'other' },
+        ],
+      },
+      { label: 'Дата рождения', key: 'birthDate', type: 'text' },
+      { label: 'Место рождения', key: 'birthPlace', type: 'text' },
+      { label: 'Дата смерти', key: 'deathDate', type: 'text' },
+      { label: 'Место смерти', key: 'deathPlace', type: 'text' },
+      { label: 'Ссылка на фото', key: 'photo', type: 'text', fullWidth: true },
+      { label: 'Биография', key: 'bio', type: 'textarea', fullWidth: true },
+      { label: 'Родители (ID через запятую)', key: 'parents', type: 'text' },
+      { label: 'Супруги (ID через запятую)', key: 'spouses', type: 'text' },
+      { label: 'Дети (ID через запятую)', key: 'children', type: 'text' },
+      { label: 'Братья/Сёстры (ID через запятую)', key: 'siblings', type: 'text' },
+    ]
 
-const emit = defineEmits<Emits>()
-const props = withDefaults(defineProps<Props>(), {
-  visible: false,
-  node: undefined,
-})
+    const closeDialog = () => emit('close')
 
-// Инициализация пустой формы
-const defaultFormData = (): NodeData => ({
-  id: '',
-  firstName: '',
-  lastName: '',
-  patronymic: '',
-  maidenName: '',
-  birthDate: '',
-  birthPlace: '',
-  deathDate: '',
-  deathPlace: '',
-  gender: '',
-  photo: '',
-  bio: '',
-  siblings: [],
-  parents: [],
-  spouses: [],
-  children: [],
-})
+    const onSave = () => {
+      const saved = save()
+      if (!saved.firstName.trim() || !saved.lastName.trim()) {
+        alert('Имя и Фамилия обязательны')
+        return
+      }
+      emit('save', saved, !props.node)
+      closeDialog()
+    }
 
-const formData = ref<NodeData>(defaultFormData())
-const imageError = ref(false)
-
-const isEditMode = computed(() => !!formData.value.id)
-
-// Преобразование массивов в строки для отображения
-const parentsString = computed(() => formData.value.parents.join(', '))
-const spousesString = computed(() => formData.value.spouses.join(', '))
-const childrenString = computed(() => formData.value.children.join(', '))
-const siblingsString = computed(() => formData.value.siblings.join(', '))
-
-// Обновление массива по строке
-const updateArray = (
-  field: keyof Pick<NodeData, 'parents' | 'spouses' | 'children' | 'siblings'>,
-  event: Event,
-) => {
-  const input = event.target as HTMLInputElement
-  const value = input.value
-  formData.value[field] = value
-    .split(',')
-    .map((id) => id.trim())
-    .filter((id) => id)
-}
-
-// Обработчик ошибки загрузки изображения
-const handleImageError = () => {
-  imageError.value = true
-}
-
-// Сброс формы при открытии
-watch(
-  () => props.visible,
-  (visible) => {
-    if (visible) {
-      imageError.value = false
-      if (props.node?.id) {
-        // Копируем данные для редактирования
-        formData.value = JSON.parse(JSON.stringify(props.node))
+    const onInput = (key: keyof NodeData, event: Event) => {
+      if (arrayFields.includes(key as any)) {
+        updateArray(key as any, event)
       } else {
-        // Создаем новую запись
-        formData.value = defaultFormData()
-        formData.value.id = `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        formData[key] = (event.target as HTMLInputElement).value
       }
     }
+
+    return {
+      formData,
+      imageError,
+      isEditMode,
+      arrayFields,
+      arrayStrings,
+      handleImageError,
+      fields,
+      closeDialog,
+      onSave,
+      onInput,
+    }
   },
-)
-
-const closeDialog = () => {
-  emit('close')
-}
-
-const savePerson = () => {
-  if (!formData.value.firstName.trim() || !formData.value.lastName.trim()) {
-    alert('Пожалуйста, заполните обязательные поля (Имя и Фамилия)')
-    return
-  }
-
-  // Создаем копию данных для передачи
-  const dataToSave: NodeData = JSON.parse(JSON.stringify(formData.value))
-  // Очищаем пустые строки в массивах
-  const arrayFields: (keyof NodeData)[] = ['siblings', 'parents', 'spouses', 'children']
-  arrayFields.forEach((field) => {
-    dataToSave[field] = (dataToSave[field] as string[]).filter((id) => id.trim() !== '')
-  })
-
-  emit('save', dataToSave, props.node === undefined)
-  closeDialog()
 }
 </script>
 
