@@ -20,6 +20,7 @@
   ></edit-dialog>
   <info-dialog :visible="infoVisible" :data="selected" @close="closeInfo" />
   <panel @load="handleLoad" @save="handleSave" @saveSVG="handleSaveSVG"></panel>
+  <chat-panel></chat-panel>
 </template>
 
 <script setup lang="ts">
@@ -44,6 +45,7 @@ import { useFileDownload } from '@/app/composables/useFileDownload'
 import { useRelationships } from '@/app/composables/useRelationships'
 import { useNetwork } from '@/app/composables/useNetwork'
 import DataManager from '@/data/DataManager'
+import ChatPanel from '@/components/ChatPanel.vue'
 
 const dataManager = new DataManager()
 
