@@ -13,7 +13,7 @@ export function nodeToNode(node: NodeData): Node {
       node.firstName +
       ' ' +
       node.lastName +
-      (node.deathDate !== 'undefined'
+      (node.deathDate
         ? '\n' +
           new Date(node.birthDate).getFullYear() +
           '-' +
@@ -26,7 +26,7 @@ export function nodeToNode(node: NodeData): Node {
     brokenImage: baseImg,
     shadow: {
       enabled: true,
-      color: node.deathDate !== 'undefined' ? 'gray' : node.gender === 'male' ? 'red' : 'magenta',
+      color: node.deathDate ? 'gray' : node.gender === 'male' ? 'red' : 'magenta',
       size: 15,
     },
   }

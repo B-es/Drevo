@@ -17,8 +17,21 @@ export function applyRelationship(
   const fromId = from.id
   const toId = to.id
 
-  const updatedFrom = { ...from }
-  const updatedTo = { ...to }
+  const updatedFrom: NodeData = {
+    ...from,
+    siblings: [...from.siblings],
+    parents: [...from.parents],
+    spouses: [...from.spouses],
+    children: [...from.children],
+  }
+
+  const updatedTo: NodeData = {
+    ...to,
+    siblings: [...to.siblings],
+    parents: [...to.parents],
+    spouses: [...to.spouses],
+    children: [...to.children],
+  }
 
   switch (type) {
     case 'spouse':
