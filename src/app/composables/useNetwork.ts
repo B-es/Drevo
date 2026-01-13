@@ -1,14 +1,16 @@
 import { ref, onMounted } from 'vue'
-import type { VueVisNetwork } from 'vue-vis-network2'
 
 export function useNetwork() {
-  const networkRef = ref<typeof VueVisNetwork | null>(null)
+  const networkRef = ref<any>(null)
   const network = ref<any>(null)
 
-  onMounted(() => {
-    if (!networkRef.value) return
-    network.value = (networkRef.value as any).network
-  })
+  const initNetwork = () => {
+    if (networkRef.value?.network) {
+      network.value = networkRef.value.network
+    }
+  }
 
-  return { networkRef, network }
+  onMounted(initNetwork)
+
+  return { networkRef, network, initNetwork }
 }

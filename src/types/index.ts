@@ -6,7 +6,7 @@ export interface NodeData {
   firstName: string
   lastName: string
   patronymic: string
-  maidenName: string // Девичья фамилия
+  maidenName?: string // Девичья фамилия
   birthDate: string
   birthPlace: string
   deathDate?: string
