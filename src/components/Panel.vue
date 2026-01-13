@@ -38,8 +38,8 @@ const handleSaveSVG = () => {
 <style scoped>
 .save-load-panel {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 16px;
+  right: 16px;
   display: flex;
   gap: 10px;
   z-index: 1000;
