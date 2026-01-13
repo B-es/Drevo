@@ -1,5 +1,5 @@
+import type { MistralInitParams } from '@/app/config/mistralAIParams'
 import type { ChatMessage } from '@/types/chat'
-import { Mistral } from '@mistralai/mistralai'
 
 interface AskTreeAIParams {
   question: string
@@ -7,12 +7,12 @@ interface AskTreeAIParams {
   history: ChatMessage[]
 }
 
-const apiKey = import.meta.env.VITE_MISTRAL_API_KEY || 'no-key'
-const client = new Mistral({ apiKey: apiKey })
-
-export async function askTreeMistralAI(params: AskTreeAIParams): Promise<string> {
-  const chatResponse = await client.chat.complete({
-    model: 'mistral-medium-latest',
+export async function askTreeMistralAI(
+  initParams: MistralInitParams,
+  params: AskTreeAIParams,
+): Promise<string> {
+  const chatResponse = await initParams.client.chat.complete({
+    model: initParams.model,
     messages: [
       {
         role: 'user',

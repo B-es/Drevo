@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import type { ChatMessage } from '@/types/chat'
 import { askTreeMistralAI } from '@/services/aiService'
+import { defaultMistralAIParams } from '@/app/config/mistralAIParams'
 
 export function useTreeChat(getTreeData: () => string) {
   const messages = ref<ChatMessage[]>([])
@@ -22,7 +23,7 @@ export function useTreeChat(getTreeData: () => string) {
     loading.value = true
 
     try {
-      const answer = await askTreeMistralAI({
+      const answer = await askTreeMistralAI(defaultMistralAIParams, {
         question: text,
         tree: getTreeData(),
         history: messages.value,
